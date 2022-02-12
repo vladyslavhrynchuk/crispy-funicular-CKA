@@ -1,0 +1,91 @@
+K8s cluster consists of master nodes and worker nodes.
+Master nodes are managing what container is placed on each node.
+Master node contains:
+	- api server
+	- ETCD
+	- controller
+	- scheduler
+
+ETCD
+It is key: value database, which store all the information about containers.
+Can be installed sepratele.
+
+Scheduler
+Is responsible for scheduling pods on workers. Does scheduling based on requested and available resources.
+Node with the most amout of resources will most probably get a new pod.
+
+Conroller
+Is responsible for controlling variuos events.
+There are many controllers, like node-controller and replication controller.
+Every concept presented in k8s has conroller.
+All controllers are packed into single Controller Manager.
+Node-Controller is checking health check of nodes in cluster by making calls to api-server every 5 seconds.
+If node is unreachable, it waits 40 sec (Node Monitor Grace Period) to mark it as unreachable.
+Then waits another 5 minutes and then removes the pods, assigned to that node.
+
+
+Api-server
+Main management component. Provided interface for the outside world.
+Also, provides interface for controller to do necessary changes.
+From time to time pinging kubelet on each node by Controller request
+
+When request received, it first authenticates user, then validates request and retrieves data.
+Insted of 'kubectl' can be controlled using POST request.
+The only component which directly interacts with ETCD.
+
+Worker node contains:
+	- kubelet
+	- container runtine
+	- kube proxy
+
+Kubelet
+Is responsible for running a container.
+Gets request from scheduler through api-server to place the pod on it's worker.
+can be found in running processes on a node.
+
+Container runtime:
+Used to run containers inside pods. 
+Usually is Docker
+
+Kube proxy
+Does networking 
+
+Replication controller and ReplicaSet
+Replication controller is old entity, which is relpaced by RS.
+RS requires selector, Controller dont.
+RS is controlling how many pods are running.
+It defines relevat to it pods by labels.
+
+Deployment
+Is simillar to RS, but allows rolling updates.
+Creates RS each time it changes.
+
+Namespaces
+Are used to divide resources.
+Pod in one NS cant by default acces pod in another ns.
+To connect to a service from different NS, it should be refered as:
+service_name.namespace.svc.cluster.local.
+To limit resource in NS, quota can be created.
+
+Services
+Used to expose and load balance pods
+Types:
+	- Cluster IP
+	- Node Port (30000 - 32727)
+	- Headless
+	- Load balancer
+
+Imperative and Declarative approach
+Imperative - tells what to do and how to do
+commands:
+	kubectl run
+	kubecrtl create
+	kybectl expose pod
+Declaratve - tell only what to do
+commands:
+	kubectl apply -f
+	kubectl replace -f
+
+Apply command
+kubectl apply from local file creates 'live object configuration' yaml, which contains configurations+ status
+and 'last applied configurations' json, which stored inside of live object configurations'
