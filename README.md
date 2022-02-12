@@ -1,2 +1,2 @@
 # crispy-funicular-CKA
-CKA course
+CKA  course
