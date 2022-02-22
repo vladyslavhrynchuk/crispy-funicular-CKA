@@ -1,0 +1,111 @@
+	Scheduling
+
+K8s scheduler searches for nodeName parameter in pod definition file.
+If it is not set, schedulers assigns nodeName to a pod.
+If there is no Scheduler on the system, the easient was to schedule is to set nodeName.
+For running pod Binding object can be created, then send request to binding api.
+
+	Taints and Tolerations:
+
+Taint is aplied to nodes in order to host only specific type of pod.
+Only pod, that tolerate the node, will be set on it.
+But! tolerated pods will not necesserily be placed on tainted node.
+Command:
+	kubectl taint nodes node-name key=value:taint_effect (NoSchedule, PreferNoSchedule, NoExecute)
+To remove taint from a node:
+	kubectl taint nodes node-name key=value:NoSchedule-
+In pod definition file toleration must be added.
+	tolerations:
+		- key:
+		  operator:
+		  value:
+		  effect:
+
+	Node Selector
+
+Node selectors are used to assign a pod to a specific node.
+It is done usind nodeSelector parameter under spec section.
+Example:
+	spec:
+		nodeSelector:
+			size: large
+size: large is a label assigned to a node.
+command:
+	kubectl label nodes <node-name> <label-key>=<label-value>
+Using Node selector, pod can mathch only a specific selectors.
+It is not possible to create OR rules.
+
+	Node Affinity
+
+Node affinity used to assign pod to a specific node using complex rules.
+Syntax:
+	spec:
+		affinity:
+			nodeAffinity:
+				requiredDuringSchedulingIgnoredDuringExecution:
+					nodeSelectorTerms:
+						- matchExpressions:
+							- key: size
+							  operator: In (Exists, NotIn, 
+							  values:
+								- Large
+Node affinity types:
+ - requiredDuringSchedulingIgnoredDuringExecution
+ - prefferedDuringSchedulingIgnoredDuringExecution
+ - requiredDuringSchedulingRequiredDuringExecution
+
+	Resource Requirements and Limits:
+
+By default k8s give a pod default namespace limits.
+It can be changed by resource request:
+	spec:
+		container:
+			resources:
+				requests:
+					memory:
+					cpu:
+
+By default k8s gives a pod default namespace limits.
+It can be changed by limits: parameter uder resources:
+Default limits and request are set using LimitRange
+
+	Ways of editing a running pod.
+
+1. run "kubectl edit pod"
+It will open pod file in VI. Save it.
+It will be saver in /tmp folder.
+
+2. "kubectl get pod -o yaml > pod.yaml"
+
+	Daemon sets
+
+Daemon sets are used to run s specific pod on all nodes of the cluster.
+Use case: kubelet
+Definition file looks similar to Deployment.
+To create it from "dry-run=client", need to create deployment and edit it.
+Daemon set cant be created imperatively.
+
+	Static pods
+
+Pod can be run by kubelet without using kubectl.
+Pod definition file should simply be placed in a specific folder.
+Need to run "ps aux | grep kubelet" on the node and search for --config
+There search for staticPodPath.
+Pods can be viewed by docker ps command.
+kubelet creates mirror object of a pod on kubeapi server.
+Static pods can be determined by suffix with the name of the node.
+Control plane componens can be deployed as a static pods. The way it done by kubeadm.
+
+	Multiple Schedulers
+
+Scheduler can be created from the default one.
+Just copy pod definition file and add few parameters.
+under the command:
+	- --scheduler-name=my-scheduler
+Leader elect option - to have multiple schedulers - need to be set to false.
+ 
+
+
+
+
+

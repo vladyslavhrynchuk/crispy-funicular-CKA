@@ -1,0 +1,23 @@
+There are lots of monitoring solutions:
+ - Prometheus
+ - Metrics server
+ - Dynatrace
+ - Datadog
+ - Elastic Stack
+
+HEAPSTER was the initial solution for monitoring.
+Now deprecated and replaced by METRICS SERVER.
+You can have one metrics server per cluster.
+It retrieves data from each node and store it IN MEMORY.
+
+Kubelet contains cAdvisor, which is responsible for retrieving performance metrics from pods.
+
+To run METRICS SERVER, just copy repo from github and aply all yaml files inside directory.
+Commands:
+	kubectl top node 
+	kubectl top pod
+
+To view logs:
+	kubectl logs -f(for live) <pod name>
+	kubectl logs -f <pod name> <container name> (for multicontainer pods)
+
