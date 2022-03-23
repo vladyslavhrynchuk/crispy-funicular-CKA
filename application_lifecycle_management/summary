@@ -1,0 +1,51 @@
+
+ROLLING UPDATES AND ROLLBACK
+
+There are 2 strategies for deploying:
+	- Recreate - all pods deleted and then new pods created.
+	- Rolling update - pods deleted one by one, only defined percentage of pods can be down.
+To perform rollback:
+	kubectl rollout undo deployment/service_name
+
+CONFIGURING APPLICATION
+
+Comprises of 3 parts:
+	- Configuring commands and arguments
+	- Configuring environmental variables
+	- Configuring secrets
+
+COMMANDS
+
+Docker container runs a certain command.
+Once the command is finished, container is deleted.
+Command can be specified by ENTRYPOINT instruction in Dockerfile.
+Arguments of a command specified in CMD section of a Dockerfile.
+CMD section can be overwritten by adding a command right after the name of a container:
+	docker run ubuntu 20
+ENTRYPOINT can be ovewritten by specifying --entypoint in "docker run":
+	docker run ubuntu --entrypoint sleep 20
+
+COMMANDS AND ARGUMENTS
+
+In K8s "command" field corresponds to "entrypoint"
+"args" field corresponds to CMD
+Arguments, specified in K8S, owerwrite arguments of a Dockerfile.
+
+ENVIRONMENTAL VARIABLES
+
+Can be specified in "env" field. it is an array.
+There a 3 wais of defining environmental variables:
+	- directly in definition file
+	- from ConfigMap
+	- from Secret
+
+MULTI CONTAINER POD
+
+Container inside these pods share the same network and the same storage.
+There are 3 design patterns of multi-container pods:
+	- Sidecar
+	- Adapter
+	- Ambassador
+INIT CONTAINER
+Created before the main container starts, does some job and gets deleted.
+Then main container gets up
