@@ -1,0 +1,52 @@
+OS UPGRADES
+
+To upgrade a node, it must be drained.
+Drain will remove all pods from that node.
+command:
+	kubectl drain <node_name>
+After update is done, node shoud be uncordoned:
+	kubectl uncordon <node_name>
+To cordon node:
+	kubectl cordon <node_name>
+When cordoned, nothing will be scheduled on the node, but old pods will still be there.
+Cordoned - unschedulable.
+
+KUBERNETES SOFTWARE VERSIONS
+
+Versioning consists of 3 parts:
+	- majorversion
+	- minor_verison
+	- patch
+Some control plane components, like ETCD or core-DNS, have dofferent versions, because they are separate projects.
+
+CLUSTER UPGRADE PROCESS
+
+Cluster components not mandatory have same version.
+But components shouldnt have version higher than API Server.
+Controller manager and scheduler can be 1 version lower.
+Kubelet and kube-proxy can be 2 versions lower.
+Kubectl can be a version lower, same or a version higher.
+K8s supports only 3 latest versions.
+If cluster was set up by kubeadm, upgrades can be checked by:
+	kubeadm upgrade plan
+Firstly, master should be upgraded, than all workers.
+
+Upgrade process
+
+1. Upgrade kubeadm tool
+2. Upgrade the cluster, using kubeadm upgrade apply
+3. Upgrade kubelet using apt, restart it
+
+BACKUP AND RESTORE METHODS
+
+There are 2 backup methods:
+1. Copy all configuration to yaml file:
+	kubectl get all --all-namespaces -o yaml > all.yaml
+There also are tools like VELERO, which hepl to back up cluster using kubeapi.
+2. Back up ETCD by snapshot:
+	etcdctl snapshot save snapshot.db
+	etcdctl snapshot restore snapshot.db --data-dir </var/lib/etcd/smapshot>
+	configure ETCD config file to use new data directory.
+
+
+
