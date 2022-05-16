@@ -1,0 +1,230 @@
+SECURITY PRIMITIVES
+
+First of all, host needs to be secured:
+	- make sure infrastructure is secured
+	- turn off password authentication
+	- turn on SSH login
+Api-server is the main part of cluster. need to ask 2 questions:
+	- Who can access the Api-server - Authentication
+		There are many ways to access the cluster:
+			- Usernames and passwords/tokens
+			- Certificates
+			- LDAP
+			- Service accounts
+	- What can they do - Authorization
+		- RBAC Authorization
+		- ABAC Authorization
+		- Node authorization
+		- Webhook
+All communication between cluster components is done using TLS certificates.
+By default, Pods can access each other. it can be changed using network policies.
+
+AUTHENTICATION
+There are 2 types of users:
+	- Humans (Admins and Developers)
+	- Robots (Service accounts)
+Kubernetes does not manage Users, it rely on certificates.
+But, It can create service account:
+	kubectl create serviceaccount sa1
+Aull User (human) access managed by Api-server. It authentificates and process a request.
+There are different authentication mechanisms:
+	- Static password file
+	- Static Token file
+	- Certificates
+	- 3d party authentication (LDAP, Kerberos)
+
+Authentication using password static file.
+	1. Need to create CSV file with password, user, userID
+		- if Api-server is a pod, mount the file as volume
+	2. Provide is as option to Api-server:
+		--basic-auth-file=user-details.csv
+	3. Restart Api-server
+To authenticate, need to run curl to master node with -u "user:password"
+Optionally, in CSV file we can add 4th column - group name.
+The same mechanism works for tokens, just replace passwor with token and provide Api-server:
+		--token-auth-file=user-details.csv
+To connect with token, perform curl with --header "Authorization: Bearer token_value"
+THIS APPROACH DEPRECATED IN VERSION 1.19 OF KUBERNETES
+
+TLS IN KUBERNETES
+
+There are 3 types if certificates:
+	- CA certificates
+	- Server certificates
+	- Client Certificates
+All connecntions shoud be secures, so it is required for server to use all server certificates and for clients to use all clients certificates.
+Server componenst, which require server certificates:
+	- Api-server
+	- ETCD
+	- Kubelet
+Client components:
+	- User
+	- Scheduler, talks to Api-server as client
+	- Controller, talks to Api-server as client
+	- Kube-proxy, talks to Api-server as client
+
+Also:
+	- Api-server talks to ETCD as client, it can use it's server certificates or create new pair specificly for ETCD.
+	- Api-server talks to Kubelet on each node for monitoring, it can use it's server certofocate or create new one.
+
+CERTIFICATE CREATION
+
+Firstly, we need to create certificates for CA
+	1. Generate keys:
+		openssl genrsa -out ca.key 2048
+	2. Create certificate signing request:
+		openssl req -new -key ca.key -subj "/CN-KUBERNETES-CA" -out ca.csr
+	3. Sign certificate. It is self signed by CA
+		openssl x509 -req -in ca.csr -signkey ca.key -out ca.crt
+
+Creating certificates for admin user:
+	1. Generate key:
+		openssl genrsa -out admin.key 2048
+	2. Create certificate signing request specifying system:masters group:
+		openssl req -new -key admin.key -subj "/CN=kube-admin/O=system:masters" -out admin.csr
+	3. Sign certificate, specifying CA certificate and key
+		openssl x509 -req -in admin.csr -CA ca.crt -CAkey ca.key -out admin.crt
+
+Creating certoficates for Api-server:
+	Api-server refered by a lot of names. these names need to be specified in config .cnf file.
+
+Creating certificate for Kubelet:
+	We need to create certificate for each node. as CN we should pass name of every node.
+	Also, kubelets talkiing to Api-server, so client certificates must be created as well.
+	in needs to be named with system: prefix and to be in SYSTEM-NODES group.
+
+VIEW CERTIFICATE DETAILS
+
+If deployed by Kubeadm, certificate details can be found in /etc/kubernetes/manifests/
+If deployed the "hard way", in /etc/systemd/system
+To troubleshoot sertificate issues, better to create a table with all certificates.
+
+When issue happens, need to check logs.
+When deployed as service in the OS:
+	journalctl -u etcd.service -l
+When deployed as pod:
+	kubectl logs etcd-master
+If component is down, we can used docker to fetch the logs.
+
+CERTIFICATES API
+
+Sogning certificates can be managed by Api server via Certificates Api:
+	- Create key and CSR
+	- Create CertificateSigningRequest yaml file and apply it
+	- Run kubectl get csr to see all request
+	- Run kubectl certificate approve
+The operation is done using controller manager.
+Controller manager has 2 options, where CA key and certificate privided for signing:
+	--cluster-signing-cert-file
+	--cluster-signing-key-file
+
+KUBECONFIG
+
+To acess cluster either by hppts or kubectl, we need to specify certificate, key and CA file.
+Specifying it every time is hard, so it can be moved to configuration file called kubeconfig.
+Then, kubeconfig needs to be specified in --kubeconfig when runnung kubectl.
+By defauld, kubectl looks in $HOME/.kube/config
+Structure of kubeconfig file:
+	- Cluster
+	- Users
+	- Context
+By kubectl config use-context we can change context.
+
+API GROUPS
+
+Kubernetes API splitted in different APIs base on version:
+	/metrics
+	/healthz
+	/version
+	/api
+	/apis
+	/logs (for different logging applications)
+/api categorized as CORE group. /apis as NAMED grop.
+CORE is for all core functionality. like pods, namespaces, PV, events, etc
+NAMED are more organized, all new feature are available by them.
+Has a lot of API GROUPS /apps /extentions /networking.k8s.io /storage.k8s.io etc
+/apps has /deployment /replicaset etc, these are RESOURCES
+RESORCES has a set of actions like get, create, update
+
+AUTHORIZATION
+
+Node authorization:
+	Used by kubelet to access Api-server.
+	Users are part of SYSTEM-NODES group
+ABAC authorization:
+	Users or groups associated wit a set of priviledges.
+RBAC authorization:
+	We are creating a set of roles and associate them to users or groups
+Webhook:
+	Third-party application (like Open Policy Agent), which checks user permittions.
+In addition we have AlwaysAllow and AlwaysDeny
+Modes are set using --authirization-mode option of the api server.
+
+RBAC
+
+We need to create Role yaml file with kind: Role.
+Then, we need to link user to that role. For this we need to create RoleBinding.
+To check if user has acces:
+	kubectl auth can-i create deployment --as dev-user --namespace
+
+CLUSTER ROLES
+
+Same as regular roles, but include not-namespaced resources.
+To see the full list of namespaced or not namespaced resources, run:
+	kubectl api-resources --namespaced=true/false
+
+SERVICE ACCOUNTS
+
+To create service account:
+	kubectl create serviceaccount dashboard-ca
+To view serice accounts:
+	kubectl get serviceaccount
+When SA created, kubernetes creates serviceaccount object and generates token for SA.
+It then creates Secret and stores token in that secret.
+To view token, run:
+	kubectl describe secret
+If application is inside a cluster, we can mount that Secret as a volume.
+We have default SA, which is authomatically mounted to a pod.
+
+IMAGE SECURITY
+
+K8s follow standart docker image naming convention.
+image: nginx means image: docker.io/library/nginx.
+To run application from private registry:
+	1) Create Secret of type docker-registry with credentials
+		kubectl create secret docker-registry regcred \
+			--docker-server=
+			--docker-username=
+			--docker-password=
+			--docker-emal=
+	2) Specify Secret under imagePullSecrets section:
+			imagePullSecrets:
+				- name: regcred
+
+SECURITY CONTEXT
+
+When running container, we can set a number of security paramethers, like id of user or linux capabilities.
+Settings can be configured on container and on pod level.
+Settings on the container will override settings on pod.
+to add Security Context:
+	spec:
+		securityContext:
+			runAsUser: 1001
+Capabilities only supported on container level.
+	capabilities:
+		add: ["MAC_ADMIN"]
+
+NETWORK POLICY
+
+Network policy is another object in K8s.
+It is applied to pods using labels.
+	podselector:
+		matchLabels:
+			role: db
+Not all networking solutions support network policy.
+
+
+
+
+
+
