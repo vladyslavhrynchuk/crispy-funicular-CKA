@@ -120,7 +120,7 @@ Controller manager has 2 options, where CA key and certificate privided for sign
 
 KUBECONFIG
 
-To acess cluster either by hppts or kubectl, we need to specify certificate, key and CA file.
+To access cluster either by https or kubectl, we need to specify certificate, key and CA file.
 Specifying it every time is hard, so it can be moved to configuration file called kubeconfig.
 Then, kubeconfig needs to be specified in --kubeconfig when runnung kubectl.
 By defauld, kubectl looks in $HOME/.kube/config

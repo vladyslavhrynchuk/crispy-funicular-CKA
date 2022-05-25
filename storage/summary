@@ -1,0 +1,33 @@
+STORAGE IN DOCKER
+There are 2 concepts in Docker:
+	- Storage Drivers (handles layered architecture)
+	- Volume Drivers (handles volumes)
+When Docker installed, it create folder structure:
+	/var/lib/docker/{aufs, containers, image, volumes}
+There are 2 types of mounting:
+	- Volume mounting (mount a volume)
+	- Bind mounting (mount location on docker host)
+
+CONTAINER STORAGE INTERFACE
+K8s has CNI for networking or CRI for container runtine.
+CSI is a standart interface, which defines a set of rules for Storage drivers.
+
+PERSISTENT VOLUMES
+Should contain:
+	- access mode
+	- capacity
+	- volume type
+	- reclaim policy
+
+PERSISTENT VOLUME CLAIM
+PVC are namespaced objects.
+To bind to specific volumes, labels and selectors can be used.
+Should contain:
+	- access mode
+	- resources request
+
+STORAGE CLASS
+
+It creates PV object and volume on a storage authomatically.
+Authomic creation of volumes is done by defining provisioner paramether.
+
