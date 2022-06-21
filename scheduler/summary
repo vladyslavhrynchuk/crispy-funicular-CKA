@@ -4,6 +4,12 @@ K8s scheduler searches for nodeName parameter in pod definition file.
 If it is not set, schedulers assigns nodeName to a pod.
 If there is no Scheduler on the system, the easient was to schedule is to set nodeName.
 For running pod Binding object can be created, then send request to binding api.
+	
+	Labels and Selectors
+
+We can filter objects by:
+	kubectl get pod --selector app=App1
+
 
 	Taints and Tolerations:
 

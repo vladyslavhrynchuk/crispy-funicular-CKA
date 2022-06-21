@@ -1,0 +1,40 @@
+	Network namespaces
+
+Containers isolated using namespaces.
+To create new namespace:
+	ip netns add red
+To list network namespaces:
+	ip netns 
+To list interfaces:
+	ip netns exec red ip link
+To list arp table:
+	ip netns exec red arp
+
+Two namespaces can be connected using virtual cable.
+To create cable:
+	ip link add veth-red type veth peer name veth-blue
+To attach each interface to ns:
+	ip link set veth-red netns red
+	ip link set veth-blue netns blue
+To assign ip addresses:
+	ip netns exec red ip addr add 192.168.1.1 veth-red
+	ip -n blue addr add 192.168.1.2 veth blue
+To bring interfaces up:
+	ip netns exec red ip link set veth-red up
+	ip -n blue link set veth-blue up
+
+To connect multiple namespaces we need bridge:
+	ip link add v-net-0 type bridge
+To bring it up:
+	ip link set dev v-net-0 up
+To delete cable:
+	ip -n red link del veth-red
+It will be deleted on another end automatically.
+To link cable to bridge:
+	ip link set veth-red-br master v-net-0
+To be able to ping all these namespaces from host, need to assing ip to bridge, since it act as an interface:
+	ip addr add 192.168.1.5/24 dev v-net-0
+To be able to ping local network of the host:
+	ip netns exec blue ip route add 192.168.5.0/24 via 192.168.1.5
+To be able to receive ping back from host network, need to enable NAT
+To be able to reach internet from namespace, need to add default gateway 
