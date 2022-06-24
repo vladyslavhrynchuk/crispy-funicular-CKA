@@ -37,4 +37,41 @@ To be able to ping all these namespaces from host, need to assing ip to bridge, 
 To be able to ping local network of the host:
 	ip netns exec blue ip route add 192.168.5.0/24 via 192.168.1.5
 To be able to receive ping back from host network, need to enable NAT
-To be able to reach internet from namespace, need to add default gateway 
+To be able to reach internet from namespace, need to add default gateway
+
+	Docker network
+
+docker run --network none nginx - No network is accesible
+docker run --network host nginx - No isolation with host. available on host port
+docker run nginx - Attached to bridge docker0.
+When container created, docker creates network namespace for it.
+docker inspect can show what namespace attached to container.
+When container attached to bridge with port mapping option, docker uses iptables to create mapping rules.
+
+	CNI
+
+CNI is a set of standarts, which define how network solutions should be developed.
+
+	Pod Networking
+
+Requirements for k8s networking:
+	- Every pod should have unique IP
+	- Pod should be able to communicate with other pod on that node.
+	- Ecery pod should be able to communicate with other pod on other node without NAT.
+	
+	CNI in Kubernetes
+
+CNI defines responsibilities also for container runtime (k8s in this case):
+	- must create network namespace
+	- identify network the container must attach to
+	- invoke network plugin whe container created and deleted
+	- JSON format of netwirk configuration
+Kubelet has option --network-plugin in it's configurations.
+
+
+
+
+
+
+
+
