@@ -68,7 +68,31 @@ CNI defines responsibilities also for container runtime (k8s in this case):
 	- JSON format of netwirk configuration
 Kubelet has option --network-plugin in it's configurations.
 
+	Service Networking
 
+Kube-proxy watches changes on a cluster via Api-server.
+Ip for services are assigned by Api-server. kube-proxy get these IP and create IPtables rules to forward requests to pods.
+We can search those rules in iptables NAT:
+	iptables -L -t NAT | grep service-name
+We can see how rules created in kube-proxy logs:
+	cat /var/log/kube-proxy.log
+
+	DNS in Kubernetes
+
+DNS server usually os deployed together with cluster.
+Record for pods not enabled by default, only for services.
+K8s uses CoreDNS, configuration stored in Corefile - /etc/coredns/Corefile
+The file can be edited as configmap.
+CoreDNS deployed as kube-dns pod.
+Address of the pod configured on resolv.conf of each pod by kubelet.
+In kubelet config file we can find IP of DNS server.
+host command can show ip addres of dns entry of a service. for pod we need to specify full dns address.
+
+	Ingress
+
+Ingress is kind of level 7 load balancer.
+Ingress controller is deployed as a regular Deployment.
+To expose ingress to external world, we need service deployed as a NodePort.
 
 
 
